@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Options Pricing & Profit Calculator</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='home.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Options Pricing & Profit Calculator</h1>
+        <p>
+          Calculate option prices, Greeks, and analyse profit scenarios with
+          precision
+        </p>
+      </div>
+
+      <div class="main-content">
+        <!-- Input Form Section -->
+        <div class="form-section">
+          <h2>Option Parameters</h2>
+          <form id="optionForm">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="currentPrice">Current Stock Price ($)</label>
+                <input
+                  type="number"
+                  id="currentPrice"
+                  name="currentPrice"
+                  step="0.01"
+                  placeholder="100.00"
+                  required
+                  value="{{ current_price }}"
+                />
+              </div>
+              <div class="form-group">
+                <label for="strikePrice">Strike Price ($)</label>
+                <input
+                  type="number"
+                  id="strikePrice"
+                  name="strikePrice"
+                  step="0.01"
+                  placeholder="105.00"
+                  required
+                  value="{{ strike_price }}"
+                />
+              </div>
+              <div class="form-group">
+                <label for="volatility">Volatility (%)</label>
+                <input
+                  type="number"
+                  id="volatility"
+                  name="volatility"
+                  step="0.1"
+                  placeholder="25.0"
+                  required
+                  value="{{ volatility }}"
+                />
+              </div>
+              <div class="form-group">
+                <label for="expiryDate">Expiry Date</label>
+                <input
+                  type="date"
+                  id="expiryDate"
+                  name="expiryDate"
+                  required
+                  value="{{ expire_date }}"
+                />
+              </div>
+              <div class="form-group">
+                <label for="riskFreeRate">Risk-Free Rate (%)</label>
+                <input
+                  type="number"
+                  id="riskFreeRate"
+                  name="riskFreeRate"
+                  placeholder="3.50"
+                  required
+                  value="{{ interest_rate }}"
+                />
+              </div>
+              <div class="form-group">
+                <label for="dividendYield">Dividend Yield (%)</label>
+                <input
+                  type="number"
+                  id="dividendYield"
+                  name="dividendYield"
+                  step="0.01"
+                  placeholder="2.00"
+                  value="{{ dividend_yield }}"
+                />
+              </div>
+            </div>
+            <button type="submit" class="calculate-btn">
+              Calculate Options
+            </button>
+          </form>
+        </div>
+
+        <!-- Results Table Section -->
+        <div class="results-section">
+          <h2>Option Prices & Greeks</h2>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th>Call Option</th>
+                  <th>Put Option</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="metric-label">Price</td>
+                  <td id="callPrice">
+                    {{ (call_price | default(0)) | round(2) }}
+                  </td>
+                  <td id="putPrice">
+                    {{ (put_price | default(0)) | round(2) }}
+                  </td>
+                </tr>
+                <tr>
+                  <td class="metric-label">Delta (Δ)</td>
+                  <td id="callDelta">
+                    {{ (call_delta | default(0)) | round(2) }}
+                  </td>
+                  <td id="putDelta">
+                    {{ (put_delta | default(0)) | round(2) }}
+                  </td>
+                </tr>
+                <tr>
+                  <td class="metric-label">Gamma (Γ)</td>
+                  <td id="callGamma">
+                    {{ (call_gamma | default(0)) | round(2) }}
+                  </td>
+                  <td id="putGamma">
+                    {{ (put_gamma | default(0)) | round(2) }}
+                  </td>
+                </tr>
+                <tr>
+                  <td class="metric-label">Theta (Θ)</td>
+                  <td id="callTheta">
+                    {{ (call_theta | default(0)) | round(2) }}
+                  </td>
+                  <td id="putTheta">
+                    {{ (put_theta | default(0)) | round(2) }}
+                  </td>
+                </tr>
+                <tr>
+                  <td class="metric-label">Vega (ν)</td>
+                  <td id="callVega">
+                    {{ (call_vega | default(0)) | round(2) }}
+                  </td>
+                  <td id="putVega">{{ (put_vega | default(0)) | round(2) }}</td>
+                </tr>
+                <tr>
+                  <td class="metric-label">Rho (ρ)</td>
+                  <td id="callRho">{{ (call_rho | default(0)) | round(2) }}</td>
+                  <td id="putRho">{{ (put_rho | default(0)) | round(2) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="chart-section">
+          <h2>Profit & Loss Analysis</h2>
+          <div class="chart-placeholder">
+            <canvas id="profitChart" width="800" height="400"></canvas>
+          </div>
+          <div class="chart-controls">
+            <button class="chart-btn active" onclick="showChart('pnl')">
+              P&L at Expiry
+            </button>
+            <!-- <button class="chart-btn" onclick="showChart('greeks')">
+              Greeks Sensitivity
+            </button> -->
+            <button class="chart-btn" onclick="showChart('volatility')">
+              Volatility Impact
+            </button>
+            <button class="chart-btn" onclick="showChart('time')">
+              Time Decay
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="text/javascript">
+      function jinja2js(vars) {
+          return vars
+      }
+      vols = jinja2js({{ (vols | default([])) | tojson }})
+      vol_call_prices = jinja2js({{ (vol_call_prices | default([])) | tojson }})
+      vol_put_prices = jinja2js({{ (vol_put_prices | default([])) | tojson }})
+
+      times = jinja2js({{ (times | default([])) | tojson }})
+      time_call_prices = jinja2js({{ (time_call_prices | default([])) | tojson }})
+      time_put_prices = jinja2js({{ (time_put_prices | default([])) | tojson }})
+
+      call_price = jinja2js({{ (call_price | default(0)) | tojson }})
+      put_price = jinja2js({{ (put_price | default(0)) | tojson }})
+      vol = jinja2js({{ (volatility | default(0)) | tojson }})
+      strike_price = jinja2js({{ (strike_price | default(0)) | tojson }})
+      current_price = jinja2js({{ (current_price | default(0)) | tojson }})
+      expire_date = jinja2js({{ (expire_date | default('')) | tojson }})
+      interest_rate = jinja2js({{ (interest_rate | default(0)) | tojson }})
+      dividend_yield = jinja2js({{ (dividend_yield | default(0)) | tojson }})
+    </script>
+    <script src="{{ url_for('static', filename='home.js') }}"></script>
+  </body>
+</html>
