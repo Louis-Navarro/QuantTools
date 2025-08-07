@@ -30,8 +30,11 @@ Given the following parameters:
 - $\sigma$: volatility of the asset.
 
 The prices for a call is given by:
+
 $$C = e^{-r\tau}(FN(d_1)-KN(d_2))$$
+
 and the price of a put option is given by:
+
 $$P = e^{-r\tau}(KN(-d_2)-FN(-d_1))$$
 
 where:
@@ -41,6 +44,7 @@ where:
 - $d_2 = d_1 - \sigma\sqrt{\tau}$.
 
 and $N$ is the cumulative distribution function of the standard normal distribution, given by:
+
 $$N(x) = \frac{1}{\sqrt{2\pi}} \int\limits_{-\infty}^x{e^{-\frac{t^2}{2}}dt}$$
 
 ## Greeks
